@@ -4,9 +4,10 @@
 
 Solutions for [Advent of Code](https://adventofcode.com/) in [Rust](https://www.rust-lang.org/).
 
-<!--- advent_readme_stars table --->
+## Benchmarks
+Minimal effort is put into these benchmarks, I just use cargo time on my laptop.
 
-<!--- benchmarking table --->
+Laptop Specs: Ryzen 7 4700U | 16GB RAM @ 3200 MT/s | Many stickers
 
 #### Day 01
 - Part 1: 1092 (133.6µs @ 6535 samples)

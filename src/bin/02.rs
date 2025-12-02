@@ -52,9 +52,11 @@ pub fn part_one(input: &str) -> Option<u64> {
                 let valid_start = min_factor.max(factor_range.start);
                 let valid_end = max_factor.min(factor_range.end);
 
-                // And now we can count the valid factors
+                // And now we can count the valid factors using the 
+                // arithmetic series formula: n/2 * (first + last)
                 if valid_start <= valid_end {
-                    sum += (valid_start..=valid_end).sum::<u64>() * (pattern as u64);
+                    let count = valid_end - valid_start + 1;
+                    sum += count * (valid_start + valid_end) / 2 * (pattern as u64);
                 }
             }
         });
@@ -62,6 +64,7 @@ pub fn part_one(input: &str) -> Option<u64> {
 }
 
 pub fn part_two(input: &str) -> Option<u64> {
+    // Now we have to deal with different counts of repeated digits
     None
 }
 

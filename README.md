@@ -10,8 +10,11 @@ Minimal effort is put into these benchmarks, I just use cargo time on my laptop.
 Laptop Specs: Ryzen 7 4700U | 16GB RAM @ 3200 MT/s | Many stickers
 
 #### Day 01
-- Part 1: 1092 (133.6µs @ 6535 samples)
-- Part 2: 6616 (159.1µs @ 5768 samples)
+- Part 1: (133.6µs @ 6535 samples)
+- Part 2: (159.1µs @ 5768 samples)
+
+#### Day 02
+- Part 1: (7.0µs @ 10000 samples)
 
 ---
 

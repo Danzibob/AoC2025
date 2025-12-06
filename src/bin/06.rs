@@ -7,46 +7,53 @@ pub fn part_one(input: &str) -> Option<u64> {
     let (val_lines, op_lines) = lines.split_at(lines.len() - 1);
 
     // Create an iterator over the value lines, parsing each number as u64
-    let mut vals: Vec<_> = val_lines.iter().map(|line| {
-        line.split_whitespace()
-            .map(|num_str| num_str.parse::<u64>().unwrap())
-    }).collect();
+    // and store them in a vector of iterators
+    let mut vals: Vec<_> = val_lines
+        .iter()
+        .map(|line| {
+            line.split_whitespace()
+                .map(|num_str| num_str.parse::<u64>().unwrap())
+        })
+        .collect();
 
-    // Now create a similar iterator for the operators
-    let ops = op_lines.first().unwrap().split_whitespace().map(|op_str| {
-        op_str.chars().next().unwrap()
-    });
+    // Create a similar iterator for the operators
+    let ops = op_lines
+        .first()
+        .unwrap()
+        .split_whitespace()
+        .map(|op_str| op_str.chars().next().unwrap());
 
     // Now we iterate over the values and operators together
     Some(ops.fold(0u64, |total, op| {
-            let column = vals.iter_mut().map(|row| {
-                row.next().unwrap()
-        });
-            let result: u64 = match op {
-                '+' => column.sum(),
-                '*' => column.product(),
-                _ => panic!("Unknown operator"),
-            };
-            total + result
-        })
-    )
+        let column = vals.iter_mut().map(|row| row.next().unwrap());
+        let result: u64 = match op {
+            '+' => column.sum(),
+            '*' => column.product(),
+            _ => panic!("Unknown operator"),
+        };
+        total + result
+    }))
 }
 
 pub fn part_two(input: &str) -> Option<u64> {
     // Yeesh this one looks like a pain
-    // We can find the split points by looking at the operators row: 
+    // We can find the split points by looking at the operators row:
     // the empty column always preceeds the operator
     let lines = input.lines().collect::<Vec<&str>>();
-    
+
+    // Convert lines to byte arrays for O(1) indexing (vs O(n) for nth_char)
+    let lines_arr: Vec<&[u8]> = lines.iter().map(|l| l.as_bytes()).collect();
+
     // Let's identify all the split points first
     let op_line = lines.last().unwrap();
-    let mut split_points: Vec<usize> = op_line.char_indices()
+    let mut split_points: Vec<usize> = op_line
+        .char_indices()
         .filter(|&(_, c)| c != ' ')
         .map(|(i, _)| i)
         .collect();
-    let ops = op_line.split_whitespace().map(|op_str| {
-        op_str.chars().next().unwrap()
-    });
+    let ops = op_line
+        .split_whitespace()
+        .map(|op_str| op_str.chars().next().unwrap());
     // We also need to append the end of the line as a split point so we can use window(2)
     split_points.push(op_line.len() + 1); // +1 to simulate the blank column at the end
 
@@ -54,36 +61,35 @@ pub fn part_two(input: &str) -> Option<u64> {
     let rows = lines.len() - 1;
 
     // Now we iterate over the split points and solve the problems individually
-    // (Note: this seems like a good candidate for rayon!)
-    let tot: u64 = split_points.windows(2).zip(ops).map(|(window, op)| {
-        let start = window[0];
-        let end = window[1]-1; // Exclude the blank column
-        let cols = end - start;
+    let tot: u64 = split_points
+        .windows(2)
+        .zip(ops)
+        .map(|(window, op)| {
+            let start = window[0];
+            let end = window[1] - 1; // Exclude the blank column
+            let cols = end - start;
 
-        let vals = (0..cols).map(|c| {
-            let mut val = 0;
-            for row in lines.iter().take(rows) {
-                match row.chars().nth(start + c) {
-                    Some(ch) if ch.is_ascii_digit() => {
-                        let d = ch.to_digit(10).unwrap() as u64;
-                        val = val * 10 + d;
-                    },
-                    _ => {}
-
+            let vals = (0..cols).map(|c| {
+                let mut val = 0;
+                for row in lines_arr.iter().take(rows) {
+                    match row[start + c] {
+                        ch if ch.is_ascii_digit() => {
+                            let d = (ch - b'0') as u64;
+                            val = val * 10 + d;
+                        }
+                        _ => {}
+                    }
                 }
-                
+                val
+            });
+            
+            match op {
+                '+' => vals.sum::<u64>(),
+                '*' => vals.product::<u64>(),
+                _ => panic!("Unknown operator"),
             }
-            val
-        });
-
-        //print!("{:?} with op {}\n", vals.clone().collect::<Vec<u64>>(), op);
-
-        match op {
-            '+' => {vals.sum::<u64>()},
-            '*' => {vals.product::<u64>()},
-            _ => panic!("Unknown operator"),
-        }
-    }).sum();
+        })
+        .sum();
 
     Some(tot)
 }

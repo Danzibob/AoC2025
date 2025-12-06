@@ -30,8 +30,8 @@ Laptop Specs: Ryzen 7 4700U | 16GB RAM @ 3200 MT/s | Many stickers
 - Part 2: (44.8µs @ 10000 samples)
 
 #### Day 06
-- Part 1: (104.7µs @ 4426 samples)
-- Part 2: (2.7ms @ 367 samples)
+- Part 1: (60.1µs @ 10000 samples)
+- Part 2: (29.8µs @ 10000 samples)
 
 ---
 

@@ -9,9 +9,7 @@ pub fn part_one(input: &str) -> Option<u64> {
     // Now we turn the whole input into a single vector for Grid
     let numbers: Vec<u32> = input
         .lines()
-        .flat_map(|line| line.chars().map(|c|{
-            if c == '@' {1} else {0} 
-        }))
+        .flat_map(|line| line.chars().map(|c| if c == '@' { 1 } else { 0 }))
         .collect();
     let grid = Grid::from_vec(numbers, line_length);
 
@@ -19,11 +17,15 @@ pub fn part_one(input: &str) -> Option<u64> {
     // For every 1 in the grid, check its neighbors
     for row in 0..grid.rows() {
         for col in 0..grid.cols() {
-            if let Some(i) = grid.get(row, col) && *i == 1 {
+            if let Some(i) = grid.get(row, col)
+                && *i == 1
+            {
                 let mut neighbor_count = 0;
                 for dx in -1..=1 {
                     for dy in -1..=1 {
-                        if let Some(value) = grid.get((row as isize + dx) as usize, (col as isize + dy) as usize) {
+                        if let Some(value) =
+                            grid.get((row as isize + dx) as usize, (col as isize + dy) as usize)
+                        {
                             neighbor_count += *value;
                         }
                     }
@@ -41,7 +43,7 @@ pub fn part_one(input: &str) -> Option<u64> {
 // Get adjacent coordinates
 // Wraps usize to avoid underflow
 // This is safe because we check bounds when accessing the grid
-fn adj(row:usize, col:usize) -> [(usize, usize); 8] {
+fn adj(row: usize, col: usize) -> [(usize, usize); 8] {
     [
         (row.wrapping_sub(1), col.wrapping_sub(1)),
         (row.wrapping_sub(1), col),
@@ -50,7 +52,7 @@ fn adj(row:usize, col:usize) -> [(usize, usize); 8] {
         (row, col + 1),
         (row + 1, col.wrapping_sub(1)),
         (row + 1, col),
-        (row + 1, col + 1)
+        (row + 1, col + 1),
     ]
 }
 
@@ -66,15 +68,9 @@ fn count_adj(grid: &Grid<bool>, row: usize, col: usize) -> u32 {
 
 pub fn part_two(input: &str) -> Option<u64> {
     // Before we construct the grid we need to determine its size
-    let first_line: &str = input.lines().next()?;
-    let line_length = first_line.len();
+    let line_length = input.find('\n').unwrap() + 1;
     // Now we turn the whole input into a single vector for Grid
-    let numbers: Vec<bool> = input
-        .lines()
-        .flat_map(|line| line.chars().map(|c|{
-            if c == '@' {true} else {false} 
-        }))
-        .collect();
+    let numbers: Vec<bool> = input.as_bytes().iter().map(|c| *c == b'@').collect();
     let mut grid = Grid::from_vec(numbers, line_length);
 
     let mut changed = true;
@@ -83,7 +79,7 @@ pub fn part_two(input: &str) -> Option<u64> {
         changed = false;
         for row in 0..grid.rows() {
             for col in 0..grid.cols() {
-                if grid.get(row, col)? == &true {
+                if *grid.get(row, col)? {
                     let count = count_adj(&grid, row, col);
                     if count < 4 {
                         *grid.get_mut(row, col)? = false;

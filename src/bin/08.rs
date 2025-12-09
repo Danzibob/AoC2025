@@ -1,6 +1,9 @@
 advent_of_code::solution!(8);
 
+#[derive(Debug)]
 struct Point(i64, i64, i64);
+
+#[derive(Debug, Clone)]
 struct Edge(usize, usize, u64);
 
 impl Point {
@@ -101,62 +104,67 @@ pub fn part_one(input: &str) -> Option<u64> {
 }
 
 pub fn part_two(input: &str) -> Option<u64> {
-    // _Fine_ I'll use the MB of RAM to store a distance matrix
+    // Problem description looks suspiciously like kruskal's algorithm
+    // We're looking for the last link made, i.e. the longest edge in the MST
+    // Kruskals isn't ideal for a connected graph, so lets use prim's
     let points: Vec<Point> = input.lines().map(Point::from_str).collect();
     let n = points.len();
-    let mut dist_matrix: Vec<u64> = vec![0; n*n];
-    for i in 0..n {
-        for j in 0..n {
-            dist_matrix[i*n + j] = points[i].dist_sq(&points[j]);
-        }
+
+    // Prim's algorithm initialization
+    let mut mst_nodes: Vec<bool> = vec![false; n];          // Nodes in the MST
+    let mut shortest_link: Vec<u64> = vec![u64::MAX; n];    // Shortest link to MST
+    let mut parent: Vec<usize> = vec![0; n];                // Closest node in MST
+
+    // Track the longest edge added to the MST
+    let mut longest_edge = Edge(0, 0, 0);
+
+    // Start from node 0
+    mst_nodes[0] = true; // Start from node 0
+    let mut nodes_in_mst = 1; // Count of nodes in MST to know when we're done
+
+    // Initialize shortest links from node 0
+    for i in 1..n {
+        shortest_link[i] = points[0].dist_sq(&points[i]);
+        parent[i] = 0;
     }
 
-    println!("Distance matrix calculated.");
+    for _ in 1..n {
+        // Find the minimum edge connecting a node to the MST
+        let mut min_dist = u64::MAX;
+        let mut next_node = 0;
+        for i in 0..n {
+            if !mst_nodes[i] && shortest_link[i] < min_dist {
+                min_dist = shortest_link[i];
+                next_node = i;
+            }
+        }
 
-    // This time we jump straight to circuit merging
-    let mut circuits: Vec<usize> = (0..points.len()).collect();
-    let mut circuit_sizes: Vec<usize> = vec![1; points.len()];
-    let mut max_circuit_size = 1;
-    let mut answer = 0;
-    while max_circuit_size < n {
-        // find the minimum distance in the distance matrix
-        let min_idx = dist_matrix.iter()
-        .enumerate()
-        .min_by(|(_, a), (_, b)| a.cmp(b))
-        .map(|(index, _)| index)
-        .unwrap();
-        // Calculate the node indices
-        let (i, j) = (min_idx / n, min_idx % n);
-        // print!("{} <==> {} ({}) | ",
-        //         i, j, dist_matrix[min_idx]
-        //     );
-        // Set that distance to max so we don't find it again
-        dist_matrix[min_idx] = u64::MAX;
-        // Merge the circuits if they are different
-        let circuit_a = circuits[i];
-        let circuit_b = circuits[j];
-        if circuit_a != circuit_b {
-            // This is a new connection, track it as the answer
-            answer = (points[i].0*points[j].0) as u64;
-            let new_circuit = circuit_a.min(circuit_b);
-            let old_circuit = circuit_a.max(circuit_b);
-            for k in 0..circuits.len() {
-                if circuits[k] == old_circuit {
-                    circuits[k] = new_circuit;
-                    circuit_sizes[new_circuit] += 1;
+        // Add this node to the MST
+        mst_nodes[next_node] = true;
+        nodes_in_mst += 1;
+
+        // Check if this edge is the longest so far
+        if min_dist > longest_edge.2 {
+            longest_edge = Edge(parent[next_node], next_node, min_dist);
+        }
+
+        // If we've added all nodes, we're done
+        if nodes_in_mst == n { break; }
+
+        // Update shortest links for remaining nodes
+        for i in 0..n {
+            if !mst_nodes[i] {
+                let dist = points[next_node].dist_sq(&points[i]);
+                if dist < shortest_link[i] {
+                    shortest_link[i] = dist;
+                    parent[i] = next_node;
                 }
             }
-            if circuit_sizes[new_circuit] > max_circuit_size {
-                max_circuit_size = circuit_sizes[new_circuit];
-                println!("New max circuit size: {}", max_circuit_size);
-            }
-            println!("{} <==> {} | {}: {}",
-                circuit_a, circuit_b, new_circuit, circuit_sizes[new_circuit]
-            );
         }
     }
 
-    Some(answer)
+    let longest = longest_edge;
+    Some((points[longest.0].0 * points[longest.1].0) as u64)
 }
 
 #[cfg(test)]
